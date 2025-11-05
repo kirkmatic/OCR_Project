@@ -8,3 +8,5 @@ ocr-project/backend/ocr_dataset/
 ocr-project/backend/ocr_logs/
 
 ocr-project/backend/sample_logs/
+
+ocr-project/backend/test_images/

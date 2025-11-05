@@ -273,12 +273,16 @@ def load_samples(label_csv_path, images_folder):
     df = pd.read_csv(label_csv_path)
     samples = []
     for _, row in df.iterrows():
-        img_filename = row['filename'] if 'filename' in row else row[0]
-        label = row['word'] if 'word' in row else row[1]
+        img_filename = row['IMAGE']
+        label = str(row['MEDICINE_NAME'])  # or combine both if needed
         img_path = os.path.join(images_folder, img_filename)
         if os.path.exists(img_path):
-            samples.append((img_path, str(label)))
+            samples.append((img_path, label))
+        else:
+            print("Missing image:", img_path)
     return samples
+    
+
 
 
 # Delete and recreate ocr_logs for a fresh TensorBoard run
@@ -341,6 +345,8 @@ if __name__ == "__main__":
         os.path.join(dataset_dir, "Training", "training_labels.csv"),
         os.path.join(dataset_dir, "Training", "training_words")
     )
+    print(f"Total samples loaded: {len(all_samples)}")
+
 
     # Shuffle samples for randomness
     random.shuffle(all_samples)

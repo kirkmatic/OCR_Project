@@ -1,9 +1,11 @@
 # Core dependencies
 tensorflow==2.15.0
+tensorflow-addons==0.21.0
 opencv-python
 numpy
 pillow
 matplotlib
+pandas
 
 # Visualization & Logging
 tensorboard
