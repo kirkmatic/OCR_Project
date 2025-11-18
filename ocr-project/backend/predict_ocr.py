@@ -6,7 +6,7 @@ import tensorflow as tf
 # ===============================
 # CONFIGURATION
 # ===============================
-MODEL_PATH = "ocr_models/ocr_model_production_fp16.tflite"  # TFLite model
+MODEL_PATH = "ocr_modelsv2/ocr_model_production_fp16.tflite"  # TFLite model
 IMAGE_PATH = "test_images"  # Folder containing test/unlabeled images
 IMG_HEIGHT = 64  # Height expected by the model
 IMG_WIDTH = 160  # Width expected by the model
