@@ -420,11 +420,11 @@ if __name__ == "__main__":
         verbose=1
     )
     
-    # Load best model
     if os.path.exists(checkpoint_path):
         print("📥 Loading best model...")
-        pred_model = load_model(checkpoint_path, custom_objects={'tf': tf})
-    
+        # Load weights into pred_model, not the whole model
+        pred_model.load_weights(checkpoint_path)
+        
     # Convert to TFLite
     print("🔄 Converting to TFLite...")
     tflite_path = convert_to_tflite_with_flex(pred_model)
