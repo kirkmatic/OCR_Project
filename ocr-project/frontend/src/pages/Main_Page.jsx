@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ImageIcon, Camera, Upload, Video, X } from 'lucide-react';
+import * as tflite from '@tensorflow/tfjs-tflite';
+import * as tf from '@tensorflow/tfjs';
 
 // Constants
 const DEVICE_TYPES = {
@@ -164,13 +166,15 @@ const getAccuracyColor = (accuracy) => {
 
 const createImageUrlFromFile = (file) => URL.createObjectURL(file);
 
-// Main Component
+const TFLITE_MODEL_URL = 'ocr-project/backend/ocr_modelsv2/ocr_model_production_fp16.tflite'; // Place in public/
+
 export default function MainPage() {
   const [predictions, setPredictions] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showWebcam, setShowWebcam] = useState(false);
   const [stream, setStream] = useState(null);
+  const [tfliteModel, setTfliteModel] = useState(null);
   
   const isMobile = useDeviceDetection();
   const fileInputRef = useRef(null);
@@ -179,6 +183,11 @@ export default function MainPage() {
   const canvasRef = useRef(null);
 
   useStreamCleanup(stream);
+
+  useEffect(() => {
+    // Load TFLite model on mount
+    tflite.loadTFLiteModel(TFLITE_MODEL_URL).then(setTfliteModel);
+  }, []);
 
   // Image handling
   const handleImageSelection = (file) => {
@@ -246,6 +255,41 @@ export default function MainPage() {
     }, 'image/jpeg', 0.8);
   };
 
+  // Utility to preprocess image for model
+  const preprocessImage = async (imageUrl) => {
+    const img = new window.Image();
+    img.src = imageUrl;
+    await new Promise((resolve) => { img.onload = resolve; });
+
+    // Convert image to tensor
+    const tensor = tf.browser.fromPixels(img, 1) // 1 channel grayscale
+      .resizeNearestNeighbor([64, 160]) // [height, width]
+      .toFloat()
+      .div(tf.scalar(255.0))
+      .expandDims(0) // [1, 64, 160, 1]
+      .expandDims(-1); // [1, 64, 160, 1]
+    return tensor;
+  };
+
+  // Prediction function
+  const predictImage = async () => {
+    if (!selectedImage || !tfliteModel) {
+      alert('Please select an image and ensure model is loaded.');
+      return;
+    }
+    setIsLoading(true);
+
+    const inputTensor = await preprocessImage(selectedImage);
+    const outputTensor = tfliteModel.predict(inputTensor);
+
+    // Decode outputTensor to text (implement CTC decoding similar to Python)
+    // For demo, just show raw output
+    setPredictions([
+      { text: outputTensor.arraySync().toString(), accuracy: 100 }
+    ]);
+    setIsLoading(false);
+  };
+
   // Action handlers
   const openCamera = () => {
     if (isMobile) {
@@ -264,20 +308,6 @@ export default function MainPage() {
     setPredictions([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
-  };
-
-  // Prediction function
-  const predictImage = async () => {
-    if (!selectedImage) {
-      alert('Please select an image first.');
-      return;
-    }
-
-    setIsLoading(true);
-  
-    
-    setPredictions(MOCK_PREDICTIONS);
-    setIsLoading(false);
   };
 
   return (
